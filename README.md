@@ -57,6 +57,103 @@ Once the hardware is free:
 1. Open VMware Workstation with the VM powered off.
 2. Go to **Virtual Machine Settings > Processors**.
 3. Enable **Virtualize Intel VT-x/EPT or AMD-V/RVI**.
+````md
+## Additional Troubleshooting
+
+In some systems, disabling Hyper-V and VBS through Windows may not be sufficient. Certain firmware (BIOS/UEFI) security features can cause Windows to continue loading virtualization-based security components even after the standard fix has been applied.
+
+### Verify Hypervisor Status
+
+After applying the fix and rebooting, run:
+
+```cmd
+systeminfo
+````
+
+If the output still reports:
+
+```text
+A hypervisor has been detected.
+```
+
+additional firmware or security settings may still be enabling virtualization-based security.
+
+### Additional BIOS/UEFI Checks
+
+Review the following settings if available on your platform:
+
+* Virtualization Technology (VT-x / AMD-V)
+* SVM Mode (AMD systems)
+* IOMMU / AMD-Vi
+* Kernel DMA Protection
+* Secure Boot
+* Trusted Execution Technology (TXT) on Intel platforms
+* Other firmware security features related to virtualization-based security
+
+Availability and naming vary by vendor, platform generation, and firmware version.
+
+### Additional Boot Configuration Verification
+
+Confirm the current bootloader configuration:
+
+```cmd
+bcdedit /enum {current}
+```
+
+Verify that:
+
+```text
+hypervisorlaunchtype    Off
+```
+
+is present.
+
+If not, reapply:
+
+```cmd
+bcdedit /set {current} hypervisorlaunchtype off
+```
+
+and reboot.
+
+### Credential Guard / Device Guard
+
+Some environments may continue enforcing virtualization-based security through Credential Guard or Device Guard policies.
+
+Check current status:
+
+```powershell
+Get-CimInstance Win32_DeviceGuard
+```
+
+or review:
+
+```cmd
+msinfo32
+```
+
+for VBS-related entries.
+
+### Validation
+
+Nested virtualization should only be enabled after:
+
+* `systeminfo` no longer reports a detected hypervisor.
+* VBS status reports disabled.
+* VMware Workstation or VirtualBox can access VT-x/AMD-V directly.
+
+### Tested Platforms
+
+The procedure has been successfully tested on:
+
+* AMD Ryzen 7 6000 Series platforms
+* Intel Core 4th Generation platforms
+* Intel Core 11th Generation platforms
+
+Results may vary depending on BIOS version, OEM firmware customizations, and Windows security policies.
+
+```
+```
 
 ## Security Note
 
